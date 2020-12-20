@@ -184,7 +184,7 @@ class Teller(db.Model):
     service = db.Column(db.String(200))
     unique_id = db.Column(db.String(255), default=ticket_unique, unique=True)
     is_synced = db.Column(db.Boolean, default=False)
-    branch_unique_id = db.Column(db.ForeignKey("branch.unique_id"))
+    branch_unique_id = db.Column(db.ForeignKey("branch.unique_id"), default=0)
 
     def __init__(self, number, branch, service, branch_unique_id):
         self.number = number

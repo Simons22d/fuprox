@@ -1865,31 +1865,7 @@ def disconnect():
     print('disconnected from server')
 
 
-@sio.on('online_data_')
-def online_data(data):
-    try:
-        data = data["booking_data"]
-        requests.post(f"{link}/sycn/online/booking", json=data)
-        time.sleep(1)
-    except requests.exceptions.ConnectionError:
-        # we are going to call script to restart this script
-        pass
 
-
-@sio.on('sync_service_')
-def sync_service_(data):
-    try:
-        requests.post(f"{link}/sycn/offline/services", json=data)
-        time.sleep(1)
-    except requests.exceptions.ConnectionError:
-        # we are going to call script to restart this script
-        # subprocess.run("systemctl")
-        pass
-
-
-@sio.on("update_ticket_data")
-def update_ticket_data(data):
-    requests.post(f"{link}/update/ticket", json=data)
 
 
 def booking_is_serviced(unique_id):
@@ -1933,17 +1909,6 @@ def update_booking_by_unique_id(bookings):
 """
 syncing all offline data
 """
-
-
-# booking_resync_data
-@sio.on("booking_resync_data")
-def booking_resync_data_(data):
-    return requests.post(f"{link}/sycn/online/booking", json=data)
-
-
-# ---------------------------------
-# ------ ACKS from offline --------
-# ---------------------------------
 
 
 def ack_teller_fail(data):
@@ -2008,34 +1973,6 @@ def is_this_branch(key):
     return branch_exists_key(key)
 
 
-ack_mapper_success = {
-    "SERVICE": ack_service_success,
-    "TELLER": ack_teller_success,
-    "BOOKING": ack_booking_success
-}
-
-ack_mapper_fail = {
-    "SERVICE": ack_service_fail,
-    "TELLER": ack_teller_fail,
-    "BOOKING": ack_booking_fail
-}
-
-
-# ack_successful_enitity_online_data
-@sio.on("ack_successful_enitity_online_data")
-def ack_successful_enitity_online_data_(data):
-    log("offline -> online sync [success]")
-    # categories = SERVICE TELLER BOOKING
-    ack_mapper_success[data["category"]](data["data"])
-
-
-@sio.on("ack_failed_enitity_online_data")
-def ack_failed_enitity_online_data_(data):
-    if data:
-        log("offline -> online sync [failed]")
-        ack_mapper_fail[data["category"]](data["data"])
-
-
 def flag_booking_as_synced(data):
     booking = booking_exists_unique(data)
     if booking:
@@ -2057,35 +1994,6 @@ def flag_teller_as_synced(data):
     if teller:
         teller.is_synced = True
     return teller
-
-
-# ---------------------------------
-# ------------END------------------
-# ---------------------------------
-
-@sio.on("add_teller_data")
-def add_teller_data(data):
-    data = data["teller_data"]
-    requests.post(f"{link}/sycn/offline/teller", json=data)
-
-
-# update_teller_data
-@sio.on("update_teller_data")
-def add_teller_data(data):
-    log(data)
-    requests.post(f"{link}/sycn/online/booking", json=data)
-
-
-@sio.on("verify_key_data")
-def verify_key(key):
-    lookup = Branch.query.filter_by(key_=key).first()
-    if lookup:
-        sio.emit("key_response", branch_schema.dump(lookup))
-
-
-@sio.on("reset_ticket_request")
-def reset_tickets_listener(data):
-    return requests.post(f"{link}/reset/ticket/counter", json=data)
 
 
 try:
