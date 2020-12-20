@@ -34,10 +34,10 @@ import subprocess
 link = "http://localhost:4000"
 link_icon = "159.65.144.235"
 # online socket link
-# socket_link = "http://159.65.144.235:5000/"
+socket_link = "http://159.65.144.235:5000/"
 
 #  offline socket link
-socket_link = "http://localhost:5000/"
+# socket_link = "http://localhost:5000/"
 # standard Python
 sio = socketio.Client()
 
@@ -1933,45 +1933,6 @@ def update_booking_by_unique_id(bookings):
 """
 syncing all offline data
 """
-
-
-@sio.on("all_sync_offline_data")
-def sync_offline_data(data):
-    # get each data category loop each of the list while posting on a timer to the
-    # appropriate end point
-    if data:
-        parsed_data = dict(data)
-        if parsed_data:
-            if parsed_data["services"]:
-                # deal with services offered
-                for service in parsed_data["services"]:
-                    service.update({"key": parsed_data["key"]})
-                    requests.post(f"{link}/sycn/offline/services", json=service)
-
-            if parsed_data["tellers"]:
-                for teller_ in parsed_data["tellers"]:
-                    teller_.update({"key_": parsed_data["key"]})
-                    requests.post(f"{link}/sycn/offline/teller", json=teller_)
-
-            if parsed_data["bookings"]:
-                # deal with bookings
-                for booking in parsed_data["bookings"]:
-                    booking.update({"key_": parsed_data["key"]})
-                    requests.post(f"{link}/sycn/online/booking", json=booking)
-
-            if parsed_data["bookings_verify"]:
-                update_booking_by_unique_id(parsed_data["bookings_verify"])
-
-            # this key here  will trigger the data for a specific branch to be
-            # fetched and pushed down to the backend module.
-            data = sync_service(parsed_data["key"])
-            final = list()
-            key = parsed_data["key"]
-            # data.append(key)
-            final.append(data)
-            final.append(key)
-            if parsed_data["key"]:
-                sio.emit("all_sync_online", {"data": final})
 
 
 # booking_resync_data
