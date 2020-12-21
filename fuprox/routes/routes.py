@@ -35,6 +35,7 @@ link = "http://localhost:4000"
 link_icon = "159.65.144.235"
 # online socket link
 socket_link = "http://159.65.144.235:5000/"
+socket_link_2 = "http://159.65.144.235:6000/"
 
 #  offline socket link
 # socket_link = "http://localhost:5000/"
@@ -2008,7 +2009,12 @@ def flag_teller_as_synced(data):
     return teller
 
 
+# server 2 connection
 try:
     sio.connect(socket_link)
 except socketio.exceptions.ConnectionError:
     print("Error! Could not connect to the socket server.")
+
+
+
+
