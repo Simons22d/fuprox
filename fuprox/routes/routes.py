@@ -1127,7 +1127,17 @@ def ahead_of_you():
     forwarded = Booking.query.filter_by(branch_id=branch.id).filter_by(
         forwarded=True).filter_by(service_name=service_name).filter_by(serviced=False).all()
 
-    final = len(lookup) + len(forwarded)
+    # if teller service and teller required service don not match
+    for booking in forwarded:
+        log(f"{booking_teller_service_real('booking.unique_id')}")
+        log(f"{booking_teller_service_forwarded('booking.unique_teller')}")
+        if not booking_teller_service_real(booking.unique_id) == booking_teller_service_forwarded(
+                booking.unique_teller):
+            # booking forwarded to the same service data
+            count = count - 1
+
+
+    final = {"msg": len(forwarded) + count}
 
     return jsonify({"infront": final})
 
