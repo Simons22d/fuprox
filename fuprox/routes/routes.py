@@ -1328,7 +1328,6 @@ def add_teller(teller_number, branch_id, service_name, unique_id, branch_unique_
     return final
 
 
-
 """
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :::::sync offline booking | service >> online data for offline updating:::
@@ -1794,26 +1793,45 @@ def branch_is_medical(branch_id):
     return service_data
 
 
-def ahead_of_you_id(id):
-    booking_id = request.json["booking_id"]
+def get_teller_service(teller_unique_id):
+    lookup = Teller.query.filter(unique_id=teller_unique_id).first()
+    return lookup.service
+
+
+def booking_teller_service_real(unique_id):
+    lookup = Booking.query.filter_by(unique_id=unique_id).first()
+    return lookup.service_name
+
+
+def booking_teller_service_forwarded(unique_id):
+    lookup = Booking.query.filter_by(unique_id=unique_id).first()
+    return get_teller_service(lookup.unique_teller)
+
+
+def ahead_of_you_id(booking_id):
     lookup = Booking.query.get(booking_id)
     lookup_data = booking_schema.dump(lookup)
     if lookup_data:
-        booking_lookup_two = Booking.query.filter_by(service_name=lookup_data["service_name"]). \
-            filter_by(branch_id=lookup_data["branch_id"]).filter_by(nxt=1001).filter_by(serviced=False). \
-            filter(Booking.date_added > lookup_data["start"]).all()
-        final_booking_data = bookings_schema.dump(booking_lookup_two)
-
+        # real not forwarded tickets
+        booking_lookup_two = Booking.query.filter_by(service_name=lookup.service_name). \
+            filter_by(branch_id=lookup.branch_id).filter_by(nxt=1001).filter_by(serviced=False). \
+            filter(Booking.date_added > lookup.start).all()
         # fowarded
+        # should not be here count if teller
         forwarded = Booking.query.filter_by(branch_id=lookup.branch_id).filter(Booking.unique_teller.isnot(
-            0)).filter_by(forwarded=True).filter_by(service_name=lookup_data["service_name"]).filter_by(
+            0)).filter_by(forwarded=True).filter_by(service_name=lookup.service_name).filter_by(
             serviced=False).all()
 
-        # forwarded = Booking.query.filter_by(branch_id=lookup.branch_id).filter(Booking.unique_teller.isnot(
-        #     0)).filter_by(forwarded=True).filter_by(service_name=lookup.service_name).filter_by(
-        #     serviced=False).all()
+        count = len(forwarded)
 
-        final = {"msg": len(final_booking_data) + len(forwarded)}
+        # if teller service and teller required service don not match
+        for booking in forwarded:
+            if not booking_teller_service_real(booking.unique_id) == booking_teller_service_forwarded(
+                    booking.unique_teller):
+                # booking forwarded to the same service data
+                count = count - 1
+
+        final = {"msg": len(booking_lookup_two) + count}
     else:
         final = {"msg": None}
 
@@ -1865,9 +1883,6 @@ def disconnect():
     print('disconnected from server')
 
 
-
-
-
 def booking_is_serviced(unique_id):
     book = Booking.query.filter_by(unique_id=unique_id).first()
     return book.serviced
@@ -1901,9 +1916,6 @@ def update_booking_by_unique_id(bookings):
             # request offline data for sync
             sio.emit("booking_update", unique_id)
     return dict()
-
-
-
 
 
 """
