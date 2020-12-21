@@ -1827,6 +1827,8 @@ def ahead_of_you_id(booking_id):
 
         # if teller service and teller required service don not match
         for booking in forwarded:
+            log(f"{booking_teller_service_real('booking.unique_id')}")
+            log(f"{booking_teller_service_forwarded('booking.unique_teller')}")
             if not booking_teller_service_real(booking.unique_id) == booking_teller_service_forwarded(
                     booking.unique_teller):
                 # booking forwarded to the same service data
