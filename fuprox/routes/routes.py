@@ -1136,8 +1136,9 @@ def ahead_of_you():
             # booking forwarded to the same service data
             count = count - 1
 
+    # final = {"msg": len(forwarded) + count}
 
-    final = {"msg": len(forwarded) + count}
+    final = len(lookup) + len(forwarded)
 
     return jsonify({"infront": final})
 
@@ -1829,10 +1830,14 @@ def ahead_of_you_id(booking_id):
             filter(Booking.date_added > lookup.start).all()
         # fowarded
         # should not be here count if teller
-        forwarded = Booking.query.filter_by(branch_id=lookup.branch_id).filter(Booking.unique_teller.isnot(
-            0)).filter_by(forwarded=True).filter_by(service_name=lookup.service_name).filter_by(
-            serviced=False).all()
+        # forwarded = Booking.query.filter_by(branch_id=lookup.branch_id).filter_by(forwarded=True).filter(
+        #     Booking.unique_teller.).filter_by(
+        #     service_name=lookup.service_name).filter_by(serviced=False).all()
+        proxy = db.session.execute(f"SELECT * FROM booking WHERE branch_id = {lookup.branch_id} AND forwarded = 1 AND "
+                                   f"service_name = '{lookup.service_name}' AND serviced = 0 AND NOT unique_teller = 0")
 
+        forwarded = [dict(x) for x in proxy]
+        print(forwarded)
         count = len(forwarded)
 
         # if teller service and teller required service don not match
@@ -1844,7 +1849,7 @@ def ahead_of_you_id(booking_id):
                 # booking forwarded to the same service data
                 count = count - 1
 
-        final = {"msg": len(booking_lookup_two) + count}
+        final = {"msg": count + len(booking_lookup_two)}
     else:
         final = {"msg": None}
 
@@ -2026,7 +2031,3 @@ try:
     sio.connect(socket_link)
 except socketio.exceptions.ConnectionError:
     print("Error! Could not connect to the socket server.")
-
-
-
-
