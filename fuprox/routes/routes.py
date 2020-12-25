@@ -1120,27 +1120,38 @@ def ahead_of_you():
     service_name = request.json["service_name"]
     branch_id = request.json["branch_id"]
 
-    branch = Branch.query.get(int(branch_id))
+    # get the tellers for that service
+    tellers = Teller.query.filter_by(service=service_name).filter_by(branch=branch_id).all()
+    # loop to get the services forwarded to these tellers
+    for teller in tellers:
+        # get booking forwared count
+        bookings = db.session.execute(f"SELECT * FROM booking WHERE unique_teller = '{teller.unique_id}' AND serviced = 0")
+        bookings_ = [dict(x)["unique_id"] for x in bookings]
 
-    lookup = Booking.query.filter_by(service_name=service_name).filter_by(nxt=1001).filter_by(
-        branch_id=branch_id).filter_by(serviced=False).filter_by(forwarded=False).all()
+    # get the maximum number of forwarded
+    # get the bookings meant for this teller that are not forwarded and other flags
 
-    forwarded = Booking.query.filter_by(branch_id=branch.id).filter_by(
-        forwarded=True).filter_by(service_name=service_name).filter_by(serviced=False).all()
-    log(f"*****{forwarded}")
-    # if teller service and teller required service don not match
-    for booking in forwarded:
-        print(booking)
-        # log(f"{booking_teller_service_real('booking.unique_id')}")
-        # log(f"{booking_teller_service_forwarded('booking.unique_teller')}")
-        # if not booking_teller_service_real(booking.unique_id) == booking_teller_service_forwarded(
-        #         booking.unique_teller):
-        #     # booking forwarded to the same service data
-        #     count = count - 1
+    bookings_final = list()
+    forwarded_per_teller = list()
+    for teller in tellers:
+        bookings = Booking.query.filter_by(unique_teller=teller.unique_id).filter_by(serviced=False).filter_by(
+            nxt=1001).all()
+        bookings_final.append(bookings)
+        forwarded_per_teller.append(len(bookings))
+        # log(f"per teller data {teller.unique_id} -> {bookings}")
 
-    # final = {"msg": len(forwarded) + count}
+    log(forwarded_per_teller)
+    # get the teller with max forwarded
+    data_ = max(forwarded_per_teller)
 
-    final = len(lookup) + len(forwarded)
+    # get this teller_kind_bookings
+    # get other booking that are not forwarded but belong to this teller type
+    query = f"SELECT * FROM booking WHERE service_name = '{service_name}' AND branch_id = {branch_id} AND serviced = 0 AND forwarded = 0 AND nxt =1001"
+
+    actual_teller_bookings = db.session.execute(query)
+    data = [dict(x)["unique_id"] for x in actual_teller_bookings]
+
+    final = len(data) + data_
 
     return jsonify({"infront": final})
 
@@ -1956,7 +1967,7 @@ def bookings_forwared_to_this_teller_and_others_of_its_kind(booking_id):
         bookings = Booking.query.filter_by(unique_teller=unique_teller).all()
         log(bookings)
 
-        query = f"SELECT * FROM booking WHERE unique_teller = '{unique_teller}'"
+        query = f"SELECT * FROM booking WHERE unique_teller = '{unique_teller}' AND serviced=0 AND nxt=1001"
         bookings = db.session.execute(query)
         bookings_ = [dict(x)["unique_id"] for x in bookings]
 
@@ -1999,7 +2010,7 @@ def bookings_forwared_to_this_teller_and_others_of_its_kind(booking_id):
                 nxt=1001).all()
             bookings_final.append(bookings)
             forwarded_per_teller.append(len(bookings))
-            log(f"per teller data {teller.unique_id} -> {bookings}")
+            # log(f"per teller data {teller.unique_id} -> {bookings}")
         # flatten the list
         log(forwarded_per_teller)
         # data_ = list(itertools.chain(*bookings_final))
