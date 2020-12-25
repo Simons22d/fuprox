@@ -1142,7 +1142,7 @@ def ahead_of_you():
 
     log(forwarded_per_teller)
     # get the teller with max forwarded
-    data_ = max(forwarded_per_teller)
+    data_ = max(forwarded_per_teller) if len(forwarded_per_teller) else 0
 
     # get this teller_kind_bookings
     # get other booking that are not forwarded but belong to this teller type
@@ -2014,7 +2014,7 @@ def bookings_forwared_to_this_teller_and_others_of_its_kind(booking_id):
         # flatten the list
         log(forwarded_per_teller)
         # data_ = list(itertools.chain(*bookings_final))
-        data_ = max(forwarded_per_teller)
+        data_ = max(forwarded_per_teller) if len(forwarded_per_teller) else 0
 
         # convert it to a set to remove duplicates
         # get this teller_kind_bookings
