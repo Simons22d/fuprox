@@ -30,6 +30,7 @@ import random, requests
 from pathlib import Path
 import os
 import subprocess
+import itertools
 
 link = "http://localhost:4000"
 link_icon = "159.65.144.235"
@@ -1126,15 +1127,16 @@ def ahead_of_you():
 
     forwarded = Booking.query.filter_by(branch_id=branch.id).filter_by(
         forwarded=True).filter_by(service_name=service_name).filter_by(serviced=False).all()
-
+    log(f"*****{forwarded}")
     # if teller service and teller required service don not match
     for booking in forwarded:
-        log(f"{booking_teller_service_real('booking.unique_id')}")
-        log(f"{booking_teller_service_forwarded('booking.unique_teller')}")
-        if not booking_teller_service_real(booking.unique_id) == booking_teller_service_forwarded(
-                booking.unique_teller):
-            # booking forwarded to the same service data
-            count = count - 1
+        print(booking)
+        # log(f"{booking_teller_service_real('booking.unique_id')}")
+        # log(f"{booking_teller_service_forwarded('booking.unique_teller')}")
+        # if not booking_teller_service_real(booking.unique_id) == booking_teller_service_forwarded(
+        #         booking.unique_teller):
+        #     # booking forwarded to the same service data
+        #     count = count - 1
 
     # final = {"msg": len(forwarded) + count}
 
@@ -1695,7 +1697,6 @@ def make_booking(service_name, start="", branch_id=1, ticket=1, active=False, up
 
         if serviced:
             lookup.serviced = True
-        log(f"some details ....> {serviced, unique_id, is_synced}")
         db.session.add(lookup)
         db.session.commit()
         final = booking_schema.dump(lookup)
@@ -1806,7 +1807,7 @@ def branch_is_medical(branch_id):
 
 
 def get_teller_service(teller_unique_id):
-    lookup = Teller.query.filter(unique_id=teller_unique_id).first()
+    lookup = Teller.query.filter_by(unique_id=teller_unique_id).first()
     return lookup.service
 
 
@@ -1820,36 +1821,214 @@ def booking_teller_service_forwarded(unique_id):
     return get_teller_service(lookup.unique_teller)
 
 
+def get_tellers_by_name_and_branch(name,branch):
+    lookup = Teller.query.filter_by(service=name).filter_by(branch=branch).all()
+    return lookup
+
+
+def tellers_offered_on(booking_id):
+    booking = Booking.query.get(booking_id)
+    tellers = Teller.query.filter_by(service=booking.service_name).filter_by(branch=booking.branch_id).all()
+    return tellers
+
+
+def tellers_offered_on_is_forwarded(booking_id):
+    booking = Booking.query.get(booking_id)
+    if booking.unique_teller:
+        teller = Teller.query.filter_by(unique_id = booking.unique_teller).first()
+        tellers = Teller.query.filter_by(service=teller.service).filter_by(branch=teller.branch).all()
+    return tellers
+
+
+def any_forwarded_ticket_on_teller(booking_id):
+    tellers = tellers_offered_on(booking_id)
+    list_x = list()
+    for teller in tellers:
+        forwarded_service_bookings_per_teller = Booking.query.filter_by(unique_teller=teller.unique_id).filter_by(forwarded=True).filter_by(serviced=False).filter_by(nxt=1001).all()
+        list_x.append(forwarded_service_bookings_per_teller)
+    list_x = list(itertools.chain(*list_x))
+    final = set(list_x)
+    return final
+
+
+def any_forwarded_ticket_on_teller_otherside(booking_id):
+    # check if other tellers have same service
+    tellers = tellers_offered_on_is_forwarded(booking_id)
+    list_x = list()
+    for teller in tellers:
+        forwarded_service_bookings_per_teller = Booking.query.filter_by(unique_teller=teller.unique_id).filter_by(forwarded=True).filter_by(serviced=False).filter_by(nxt=1001).all()
+        list_x.append(forwarded_service_bookings_per_teller)
+    list_x = list(itertools.chain(*list_x))
+    final = set(list_x)
+
+    return final
+
+
+
+def other_service_bookings_tellers_of_this_booking_id_to_these_service_tellers(booking_id):
+    booking = Booking.query.get(booking_id)
+    # service name
+    booking_service = Booking.service_name
+    # get tellers
+    tellers = Teller.query.filter_by(service=booking_service).all()
+    # booking to the teller
+    final = 0
+    for teller in tellers:
+        # select bookings which are not type loans and is forwarded and not serviced and nxt = 1001 and unique_teller
+        proxy = db.session.execute(f"SELECT count(*) FROM booking WHERE  service_name='{booking_service}' AND forwarded "
+                                   f"= 1 AND serviced = 0 AND nxt = 1001 AND unique_teller='{teller.unique_id}'")
+        data = [list(x) for x in proxy ]
+        data = list(itertools.chain(*data))
+        final = final + data[0]
+    return final
+
+
+def forwarded_bookings_to_this_kind_of_tellers(booking_id):
+    # get teller_forwareded to type
+    booking = Booking.query.get(booking_id)
+    # teller_type
+    teller = booking.unique_teller
+    # get teller
+    init_target_teller  = Teller.query.filter_by(unique_id = teller).first()
+
+    # service_type
+    service_type = init_target_teller.service
+
+    # get all tellers with the
+    tellers = Teller.query.filter_by(service = service_type).all()
+    # tellers bookings
+    final = 0
+    for teller in tellers:
+        proxy =db.session.execute(f"select count(*) from booking where forwarded= 1 and nxt =1001 and serviced = 0 "
+                                  f"and unique_teller = '{teller.unique_id}'")
+        data = [list(x) for x in proxy]
+        data = list(itertools.chain(*data))
+        final = final + data[0]
+    return final
+
+def point_x(booking_id):
+    final = list()
+    log(f"ANY FORWARDED TICKET ON TELLER {any_forwarded_ticket_on_teller(booking_id)}")
+    log(f"ANY OWN FORWARDED TICKET ON OTHER TELLER {any_forwarded_ticket_on_teller_otherside(booking_id)}")
+    log(other_service_bookings_tellers_of_this_booking_id_to_these_service_tellers(booking_id))
+    log(forwarded_bookings_to_this_kind_of_tellers(booking_id))
+    # if any_forwarded_ticket_on_teller(booking_id):
+    #
+    # # get this booking forwarded service
+    # book_get = Booking.query.filter_by(id=booking_id).filter_by(forwarded=True).first()
+    #
+    # #  get the booking forwarded to that service
+    # forwarded_service = get_teller_service(book_get.unique_teller)
+    #
+    # # get tellers which ofer this service
+    # # get booking forawarded to each of these tellers
+    # tellers = get_tellers_by_name_and_branch(forwarded_service,book_get.branch_id)
+    #
+    # # for each of these tellers get services booked to them either active or also add to the one that are
+    # list_x = list()
+    # for teller in tellers:
+    #     forwarded_service_bookings_per_teller = Booking.query.filter_by(unique_teller=teller.unique_id).filter_by(forwarded=True).filter_by(serviced=False).filter_by(nxt=1001).all()
+    #     list_x.append(forwarded_service_bookings_per_teller)
+    # list_x = list(itertools.chain(*list_x))
+    # final = set(list_x)
+
+
+    return len(final)
+
+
+
+def bookings_forwared_to_this_teller_and_others_of_its_kind(booking_id):
+    init = Booking.query.get(booking_id)
+    # forwarded status
+    is_forwarded = init.forwarded
+    if is_forwarded :
+        # use unique teller types
+        unique_teller = init.unique_teller
+
+        # unique teller service
+        teller = Teller.query.filter_by(unique_id=unique_teller).first()
+        # get this tellers service
+        unique_teller_service = teller.service
+        unique_teller_branch_id = teller.branch
+
+
+        # get the teller bookings as teller forwardig only works for tellers forwarded
+        bookings = Booking.query.filter_by(unique_teller=unique_teller).all()
+        log(bookings)
+
+        query = f"SELECT * FROM booking WHERE unique_teller = '{unique_teller}'"
+        bookings = db.session.execute(query)
+        bookings_ = [dict(x)["unique_id"] for x in bookings]
+
+        forwarded_teller_bookings = f"SELECT * FROM booking WHERE service_name = '{unique_teller_service}' AND " \
+                                    f"branch_id = {unique_teller_branch_id} AND serviced = 0 AND forwarded = 0 AND " \
+                                    f"nxt =1001 AND date(date_added) < date('{init.start}') ORDER BY date_added DESC"
+
+        data = db.session.execute(forwarded_teller_bookings)
+        data_ = [x for x in data]
+        inx = 0
+        for index, x in enumerate(bookings_):
+            if init.unique_id == x:
+                inx = index
+
+        final = len(bookings_[:inx]) + len(data_)
+
+        # log(bookings_)
+        # log(bookings_[:inx])
+        # log(f"final : {final}")
+    else:
+        """
+        Get teller by this booking service type and branch id 
+        Then for all those tellers that offer the service that this booking offers 
+        Get the forwarded booking there regardless of service but only get these forwarded one by the teller_unique 
+        on bookings
+        (This will include getting booking for all tellers and then summing up)
+        """
+        # use service_name and branch_id
+        normal_teller = Teller.query.filter_by(service=init.service_name).filter_by(branch=init.branch_id).first()
+        # tellers to work with
+        tellers = Teller.query.filter_by(service=normal_teller.service).filter_by(branch=normal_teller.branch).all()
+
+        log(f"Target Tellers ->{tellers}")
+        # we are going to get the forwarded and get the max. why? we cannot predetermine the teller which will
+        # service the booking
+        bookings_final = list()
+        forwarded_per_teller = list()
+        for teller in tellers:
+            bookings = Booking.query.filter_by(unique_teller= teller.unique_id).filter_by(serviced=False).filter_by(
+                nxt=1001).all()
+            bookings_final.append(bookings)
+            forwarded_per_teller.append(len(bookings))
+            log(f"per teller data {teller.unique_id} -> {bookings}")
+        # flatten the list
+        log(forwarded_per_teller)
+        # data_ = list(itertools.chain(*bookings_final))
+        data_ = max(forwarded_per_teller)
+
+        # convert it to a set to remove duplicates
+        # get this teller_kind_bookings
+        # get other booking that are not forwarded but belong to this teller type
+        query = f"SELECT * FROM booking WHERE service_name = '{normal_teller.service}' AND branch_id = {normal_teller.branch} AND serviced = 0 AND forwarded = 0 AND nxt =1001"
+
+        actual_teller_bookings = db.session.execute(query)
+        data = [dict(x)["unique_id"] for x in actual_teller_bookings]
+        inx = 0
+        log(data)
+        for index, x in enumerate(data):
+            if init.unique_id == x:
+                inx = index
+
+        final = len(data[:inx]) + data_
+        # log(f"CCC{data[:inx]}")
+        # log(f"NOT {data_}")
+        # log(f"this booking {init.unique_id}")
+    return final
+
 def ahead_of_you_id(booking_id):
     lookup = Booking.query.get(booking_id)
-    lookup_data = booking_schema.dump(lookup)
-    if lookup_data:
-        # real not forwarded tickets
-        booking_lookup_two = Booking.query.filter_by(service_name=lookup.service_name). \
-            filter_by(branch_id=lookup.branch_id).filter_by(nxt=1001).filter_by(serviced=False). \
-            filter(Booking.date_added > lookup.start).all()
-        # fowarded
-        # should not be here count if teller
-        # forwarded = Booking.query.filter_by(branch_id=lookup.branch_id).filter_by(forwarded=True).filter(
-        #     Booking.unique_teller.).filter_by(
-        #     service_name=lookup.service_name).filter_by(serviced=False).all()
-        proxy = db.session.execute(f"SELECT * FROM booking WHERE branch_id = {lookup.branch_id} AND forwarded = 1 AND "
-                                   f"service_name = '{lookup.service_name}' AND serviced = 0 AND NOT unique_teller = 0")
-
-        forwarded = [dict(x) for x in proxy]
-        print(forwarded)
-        count = len(forwarded)
-
-        # if teller service and teller required service don not match
-        for booking in forwarded:
-            log(f"{booking_teller_service_real('booking.unique_id')}")
-            log(f"{booking_teller_service_forwarded('booking.unique_teller')}")
-            if not booking_teller_service_real(booking.unique_id) == booking_teller_service_forwarded(
-                    booking.unique_teller):
-                # booking forwarded to the same service data
-                count = count - 1
-
-        final = {"msg": count + len(booking_lookup_two)}
+    if lookup:
+        forwarded = bookings_forwared_to_this_teller_and_others_of_its_kind(booking_id)
+        final = {"msg":  forwarded }
     else:
         final = {"msg": None}
 
