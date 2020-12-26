@@ -1,8 +1,10 @@
-import requests
-from requests.auth import HTTPBasicAuth
+import logging
 from base64 import b64encode
 from datetime import datetime
-import logging
+
+import requests
+from requests.auth import HTTPBasicAuth
+
 """
 ERIKO
 qq4lh4XeRQDGKVnvJS4OyGYL2xFtJT2s
@@ -15,12 +17,10 @@ vqB3jnDyqP1umewH
 consumer_key = "qq4lh4XeRQDGKVnvJS4OyGYL2xFtJT2s"
 consumer_secret = "GdWPdMXMWKVMu7Xm"
 
+
 # denis
 # consumer_key = "vK3FkmwDOHAcX8UPt1Ek0njU9iE5plHG"
 # consumer_secret = "vqB3jnDyqP1umewH"
-
-
-
 
 
 def authenticate():
@@ -32,7 +32,7 @@ def authenticate():
     return r.text
 
 
-def stk_push(token, business_shortcode, lipa_na_mpesapasskey, amount, party_a, phonenumber,callbackurl):
+def stk_push(token, business_shortcode, lipa_na_mpesapasskey, amount, party_a, phonenumber, callbackurl):
     api_url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
     headers = {"Authorization": "Bearer %s" % token}
     timestamp = datetime.now().strftime("%Y%m%d%I%M%S")
@@ -52,5 +52,5 @@ def stk_push(token, business_shortcode, lipa_na_mpesapasskey, amount, party_a, p
         "TransactionDesc": "test",
     }
     response = requests.post(api_url, json=req, headers=headers)
-    logging.info("response",response)
+    logging.info("response", response)
     return response
