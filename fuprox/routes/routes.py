@@ -1126,10 +1126,10 @@ def service_offered():
 @app.route("/ahead/of/you", methods=["POST"])
 def ahead_of_you():
     service_name = request.json["service_name"]
-    branch_id = request.json["branch_id"]
+    branch_id = request.json["unique_id"]
 
     # get the tellers for that service
-    tellers = Teller.query.filter_by(service=service_name).filter_by(branch=branch_id).all()
+    tellers = Teller.query.filter_by(service=service_name).filter_by(unique_id=branch_id).all()
     log(f"service name {service_name}")
     log(f"Branch_id {branch_id}")
     # loop to get the services forwarded to these tellers
@@ -1237,13 +1237,18 @@ def sycn_teller():
     unique_id = request.json["unique_id"]
     branch_unique_id = request.json["branch_unique_id"]
     teller_ = dict()
+    online_branch_data = branch_by_unique_id(branch_unique_id)
     try:
-        teller_ = add_teller(number_, branch, service, unique_id, branch_unique_id)
+        teller_ = add_teller(number_, online_branch_data.id, service, unique_id, branch_unique_id)
     except sqlalchemy.exc.IntegrityError as e:
         print(e)
         print("Error! Teller could not be added Could not add the record.")
     return teller_
 
+
+def branch_by_unique_id(branch_unique_id):
+    lookup = Branch.query.filter_by(unique_id = branch_unique_id ).first()
+    return lookup
 
 @app.route("/update/ticket", methods=["POST"])
 def update_tickets_():
