@@ -671,7 +671,8 @@ def get_book():
     if user_id_exists(user_id) and get_booking(booking_id):
         user = user_id_exists(user_id)
         booking = get_booking(booking_id)
-        if user['id'] == booking["user"]:
+        print(user.id,booking["user"])
+        if user.id == booking["user"]:
             # return the ticket
             data = Booking.query.get(booking_id)
             final = booking_schema.dump(data)
@@ -1821,8 +1822,7 @@ def get_user_bookings(user_id):
 
 def user_id_exists(user_id):
     lookup = Customer.query.get(user_id)
-    data = user_schema.dump(lookup)
-    return data
+    return lookup
 
 
 def branch_is_medical(branch_id):
