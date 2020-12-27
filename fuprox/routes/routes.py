@@ -1147,7 +1147,7 @@ def ahead_of_you():
             nxt=1001).all()
         bookings_final.append(bookings)
         forwarded_per_teller.append(len(bookings))
-        # log(f"per teller data {teller.unique_id} -> {bookings}")
+        log(f"per teller data {teller.unique_id} -> {bookings}")
 
     log(forwarded_per_teller)
     # get the teller with max forwarded
@@ -1159,7 +1159,8 @@ def ahead_of_you():
 
     actual_teller_bookings = db.session.execute(query)
     data = [dict(x)["unique_id"] for x in actual_teller_bookings]
-
+    log(f">>{data_}")
+    log(f"<<<<<{len(data)}")
     final = len(data) + data_
 
     return jsonify({"infront": final})
