@@ -668,8 +668,8 @@ def get_book():
     # get booking id
     booking_id = request.json["booking_id"]
     user_id = request.json["user_id"]
-    print(user_id)
-    print(booking_id)
+    print("user_id",user_id)
+    print("booking_id",booking_id)
 
     user = Customer.query.get(int(user_id))
     booking = Booking.query.get(int(booking_id))
