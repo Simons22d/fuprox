@@ -688,6 +688,10 @@ def get_book():
                     "start": final["start"],
                     "code": data["code"] + final["ticket"]
                 }
+            else:
+                res = {"msg": "user/booking mismatch"}
+        else:
+            res = {"msg": "user/booking mismatch"}
     else:
         res = {"msg": "user/booking mismatch"}
     return jsonify({"booking_data": res})
