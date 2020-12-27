@@ -1126,7 +1126,7 @@ def service_offered():
 @app.route("/ahead/of/you", methods=["POST"])
 def ahead_of_you():
     service_name = request.json["service_name"]
-    branch_id = request.json["unique_id"]
+    branch_id = request.json["branch_id"]
 
     # get the tellers for that service
     tellers = Teller.query.filter_by(service=service_name).filter_by(unique_id=branch_id).all()
