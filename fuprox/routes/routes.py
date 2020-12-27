@@ -671,9 +671,11 @@ def get_book():
     print(user_id)
     print(booking_id)
 
-    user = Customer.query.get(2)
-    booking = Booking.query.get(129)
+    user = Customer.query.get(int(user_id))
+    booking = Booking.query.get(int(booking_id))
 
+    print(user)
+    print(booking)
     if user and booking:
 
             # return the ticket
