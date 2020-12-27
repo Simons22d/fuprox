@@ -668,10 +668,12 @@ def get_book():
     # get booking id
     booking_id = request.json["booking_id"]
     user_id = request.json["user_id"]
+    print(user_id)
+    print(booking_id)
+
     user = Customer.query.get(2)
     booking = Booking.query.get(129)
-    print(user)
-    print(booking)
+
     if user and booking:
 
             # return the ticket
