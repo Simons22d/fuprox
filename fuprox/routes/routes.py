@@ -668,9 +668,13 @@ def get_book():
     # get booking id
     booking_id = request.json["booking_id"]
     user_id = request.json["user_id"]
-    if user_id_exists(user_id) and get_booking(booking_id):
-        user = user_id_exists(user_id)
-        booking = get_booking(booking_id)
+    print(user_id)
+    print(booking_id)
+    user = user_id_exists(user_id)
+    booking = get_booking(booking_id)
+    print(user)
+    print(booking)
+    if user and booking:
 
         # return the ticket
         data = Booking.query.get(booking_id)
