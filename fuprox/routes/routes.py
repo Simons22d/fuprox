@@ -1133,6 +1133,7 @@ def ahead_of_you():
     log(f"tellers {tellers}")
     # loop to get the services forwarded to these tellers
     for teller in tellers:
+        log(teller)
         # get booking forwared count
         bookings = db.session.execute(
             f"SELECT * FROM booking WHERE unique_teller = '{teller.unique_id}' AND serviced = 0")
