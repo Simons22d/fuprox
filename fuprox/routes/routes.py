@@ -671,7 +671,7 @@ def get_book():
     print(user_id)
     print(booking_id)
     user = Customer.query.get(2)
-    booking = booking.query.get(129)
+    booking = Booking.query.get(129)
     # booking = get_booking(booking_id)
     print(user)
     print(booking)
