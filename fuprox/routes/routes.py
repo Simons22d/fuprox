@@ -671,26 +671,24 @@ def get_book():
     if user_id_exists(user_id) and get_booking(booking_id):
         user = user_id_exists(user_id)
         booking = get_booking(booking_id)
-        print(user.id,booking["user"])
-        if user.id == booking["user"]:
-            # return the ticket
-            data = Booking.query.get(booking_id)
-            final = booking_schema.dump(data)
-            if final:
-                name = ServiceOffered.query.filter_by(name=final["service_name"]).first()
-                data = service_offer_schema.dump(name)
-                res = {
-                    "active": final["active"],
-                    "branch_id": final["branch_id"],
-                    "booking_id": final["id"],
-                    "service_name": final["service_name"],
-                    "serviced": final["serviced"],
-                    "user_id": final["user"],
-                    "start": final["start"],
-                    "code": data["code"] + final["ticket"]
-                }
-        else:
-            res = {'msg': "user/booking mismatch"}
+
+        # return the ticket
+        data = Booking.query.get(booking_id)
+        final = booking_schema.dump(data)
+        if final:
+            name = ServiceOffered.query.filter_by(name=final["service_name"]).first()
+            data = service_offer_schema.dump(name)
+            res = {
+                "active": final["active"],
+                "branch_id": final["branch_id"],
+                "booking_id": final["id"],
+                "service_name": final["service_name"],
+                "serviced": final["serviced"],
+                "user_id": final["user"],
+                "start": final["start"],
+                "code": data["code"] + final["ticket"]
+            }
+
     else:
         res = {"msg": "user/booking mismatch"}
     return jsonify({"booking_data": res})
