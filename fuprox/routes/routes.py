@@ -670,8 +670,9 @@ def get_book():
     user_id = request.json["user_id"]
     print(user_id)
     print(booking_id)
-    user = user_id_exists(user_id)
-    booking = get_booking(booking_id)
+    user = Customer.query.get(2)
+    booking = booking.query.get(129)
+    # booking = get_booking(booking_id)
     print(user)
     print(booking)
     if user and booking:
@@ -682,16 +683,17 @@ def get_book():
         if final:
             name = ServiceOffered.query.filter_by(name=final["service_name"]).first()
             data = service_offer_schema.dump(name)
-            res = {
-                "active": final["active"],
-                "branch_id": final["branch_id"],
-                "booking_id": final["id"],
-                "service_name": final["service_name"],
-                "serviced": final["serviced"],
-                "user_id": final["user"],
-                "start": final["start"],
-                "code": data["code"] + final["ticket"]
-            }
+            # res = {
+            #     "active": final["active"],
+            #     "branch_id": final["branch_id"],
+            #     "booking_id": final["id"],
+            #     "service_name": final["service_name"],
+            #     "serviced": final["serviced"],
+            #     "user_id": final["user"],
+            #     "start": final["start"],
+            #     "code": data["code"] + final["ticket"]
+            # }
+            dict()
 
     else:
         res = {"msg": "user/booking mismatch"}
