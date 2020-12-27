@@ -123,7 +123,7 @@ def add_user_account(user):
         lookup = AccountStatus(user)
         db.session.add(lookup)
         db.session.commit()
-        db.session.close()
+        
         # get user data
         lookup = AccountStatus.query.filter_by(user=user).first()
         return account_schema.dump(lookup)
@@ -140,7 +140,7 @@ def activate_account(usr):
             l = AccountStatus.query.filter_by(user=user.id).first()
             l.active = True
             db.session.commit()
-            db.session.close()
+            
             return account_schema.dump(lookup)
         else:
             return None
@@ -257,7 +257,7 @@ def get_dev():
     if lookup:
         lookup.email = f"{secrets.token_hex(4)}@gmail.com"
         db.session.commit()
-        db.session.close()
+        
         return jsonify(user_schema.dump(lookup))
     else:
         return jsonify({
@@ -309,7 +309,7 @@ def adduser():
             try:
                 db.session.add(user)
                 db.session.commit()
-                db.session.close()
+                
                 data = user_schema.dump(user)
 
                 # import time
@@ -413,11 +413,11 @@ def password_change():
                 hashed_password = bcrypt.generate_password_hash(password)
                 user.password = hashed_password
                 db.session.commit()
-                db.session.close()
+                
                 # mark code as used
                 lookup.used = True
                 db.session.commit()
-                db.session.close()
+                
                 # send password change email
                 send_email(user.email, "Password Successfully Changed", password_changed())
 
@@ -458,7 +458,7 @@ def reset_ticket():
     for booking in lookup:
         booking.nxt = 4004
         db.session.commit()
-        db.session.close()
+        
     #  here we are going to filter all tickets with the status [nxt == 4004]
     reset_data = get_all_bookings_no_branch()
     if reset_data:
@@ -487,7 +487,7 @@ def save_code(user, code):
     lookup = Recovery(user, code)
     db.session.add(lookup)
     db.session.commit()
-    db.session.close()
+    
     return recovery_schema.dump(lookup)
 
 
@@ -638,7 +638,7 @@ def add_branches():
     branch = Branch(name, company, longitude, latitude, opens, closes, service, description)
     db.session.add(branch)
     db.session.commit()
-    db.session.close()
+    
     return branch_schema.jsonify(branch)
 
 
@@ -649,7 +649,7 @@ def add_service():
     service = Service(name, description)
     db.session.add(service)
     db.session.commit()
-    db.session.close()
+    
     return service_schema.jsonify(service)
 
 
@@ -711,7 +711,7 @@ def make_book():
     payment = Payments("texts", mpesa_transaction_key)
     db.session.add(payment)
     db.session.commit()
-    db.session.close()
+    
     # callback_url = f"http://{link_icon}:65123/mpesa/b2c/v1"
 
     # token_data = authenticate()
@@ -836,7 +836,7 @@ def payment_on():
     lookup = Payments(res, mpesa_transaction_key)
     db.session.add(lookup)
     db.session.commit()
-    db.session.close()
+    
     # geting the object in the db by this key
     lookup = Payments.query.filter_by(token=mpesa_transaction_key).first()
     data = payment_schema.dump(lookup)
@@ -1267,7 +1267,6 @@ def update_tickets_():
             # make this booking active
             booking_lookup.serviced = True
             db.session.commit()
-            db.session.close()
             final = booking_schema.dump(booking_lookup)
         # if data is not saved save
         # ______!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1282,7 +1281,6 @@ def payment_user_status():
     # we are going to work with new mpsay payments
     db.session.add(lookup)
     db.session.commit()
-    db.session.close()
     return payment_schema.jsonify(lookup)
 
 
@@ -1339,7 +1337,6 @@ def add_teller(teller_number, branch_id, service_name, unique_id, branch_unique_
                 try:
                     db.session.add(lookup)
                     db.session.commit()
-                    db.session.close()
                     print("added")
                     ack_successful_entity("TELLER", teller_schema.dump(lookup))
                     log(f"teller synced + {unique_id}")
@@ -1361,7 +1358,7 @@ def add_teller(teller_number, branch_id, service_name, unique_id, branch_unique_
 
                 db.session.add(lookup)
                 db.session.commit()
-                db.session.close()
+                
                 final = teller_schema.dump(lookup)
                 log(f"teller synced + {unique_id}")
 
@@ -1371,7 +1368,7 @@ def add_teller(teller_number, branch_id, service_name, unique_id, branch_unique_
         log("We should make teller synced")
         lookup.is_synced = True
         db.session.commit()
-        db.session.close()
+        
         final = dict()
     return final
 
@@ -1474,7 +1471,7 @@ def create_service(name, teller, branch_id, code, icon_id, unique_id=""):
                 try:
                     db.session.add(service)
                     db.session.commit()
-                    db.session.close()
+                    
                     ack_successful_entity("SERVICE", service_schema.dump(service))
                     log(f"service synced + {unique_id}")
                 except sqlalchemy.exc.IntegrityError as e:
@@ -1712,7 +1709,7 @@ def make_booking(service_name, start="", branch_id=1, ticket=1, active=False, up
 
         db.session.add(lookup)
         db.session.commit()
-        db.session.close()
+        
         final = booking_schema.dump(lookup)
         if final:
             ack_successful_entity("BOOKING", final)
@@ -1735,7 +1732,7 @@ def make_booking(service_name, start="", branch_id=1, ticket=1, active=False, up
             lookup.serviced = True
         db.session.add(lookup)
         db.session.commit()
-        db.session.close()
+        
         final = booking_schema.dump(lookup)
         if final:
             ack_successful_entity("BOOKING", final)
@@ -2141,14 +2138,14 @@ def update_booking_by_unique_id(bookings):
                 if not booking_is_serviced(unique_id):
                     booking.serviced = True
                     db.session.commit()
-                    db.session.close()
+                    
             if bool(forwarded):
                 if unique_teller:
                     if not booking_is_forwarded(unique_id):
                         booking.forwarded = True
                         booking.unique_teller = unique_teller
                         db.session.commit()
-                        db.session.close()
+                        
         else:
             # request offline data for sync
             sio.emit("booking_update", unique_id)
@@ -2227,7 +2224,7 @@ def flag_booking_as_synced(data):
     if booking:
         booking.is_synced = True
         db.session.commit()
-        db.session.close()
+        
     return booking
 
 
@@ -2236,7 +2233,7 @@ def flag_service_as_synced(data):
     if service:
         service.is_synced = True
         db.session.commit()
-        db.session.close()
+        
     return service
 
 
