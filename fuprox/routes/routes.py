@@ -1130,7 +1130,8 @@ def ahead_of_you():
 
     # get the tellers for that service
     tellers = Teller.query.filter_by(service=service_name).filter_by(branch=branch_id).all()
-    log(f"tellers {tellers}")
+    log(f"service name {service_name}")
+    log(f"Branch_id {branch_id}")
     # loop to get the services forwarded to these tellers
     for teller in tellers:
         log(teller)
