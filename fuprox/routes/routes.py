@@ -749,10 +749,10 @@ def make_book_():
     # we are going to use the payments table to display;
     lookup = Payments.query.filter_by(token=token).first()
     print(lookup)
-    main object
+    # main object
     payment_data = payment_schema.dump(lookup)
     print(">>>.",payment_data)
-    end
+    # end
     if payment_data:
         main = json.loads(payment_data["body"])
         parent = main["Body"]["stkCallback"]
@@ -781,7 +781,7 @@ def make_book_():
     # elif int(amount) == 5:
     #     final = create_booking(service_name, start, branch_id, False, user_id)
     #     sio.emit("online", final)
-    # return jsonify(final)
+    return jsonify(final)
 
 
 @app.route("/token/status", methods=["POST"])
