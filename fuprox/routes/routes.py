@@ -710,10 +710,7 @@ def make_book():
     global mpesa_transaction_key
     mpesa_transaction_key = secrets.token_hex(10)
 
-    payment = Payments("texts", mpesa_transaction_key)
-    db.session.add(payment)
-    db.session.commit()
-    
+
     callback_url = f"http://{link_icon}:65123/mpesa/b2c/v1"
     # callback_url = f"http://bab54df3722e.ngrok.io/mpesa/b2c/v1"
 
@@ -747,38 +744,33 @@ def make_book_():
     amount = request.json["amount"]
 
     # we are going to use the payments table to display;
-    lookup = Payments.query.filter_by(token=token).all()
-    for x in lookup:
-        log(x.id)
+    lookup = Payments.query.filter_by(token=token).first()
+
     # main object
-    payment_data = payments_schema.dump(lookup)
-    print(">>>.", payment_data)
+    payment_data = payment_schema.dump(lookup)
 
-    # end
-    payment_data = payment_data[1]
-
-    # if payment_data:
-    #     main = json.loads(payment_data["body"])
-    #     parent = main["Body"]["stkCallback"]
-    #     result_code = parent["ResultCode"]
-    #     result_desc = parent["ResultDesc"]
-    #     if int(result_code) == 0:
-    #         callback_meta = parent["CallbackMetadata"]["Item"]
-    #         amount = callback_meta[0]["Value"]
-    #         # succesful payment
-    #         if int(amount) == 10:
-    #             # final = make_booking(service_name, start, branch_id, instant=True, user=user_id)
-    #             final = create_booking(service_name, start, branch_id, True, user_id)
-    #             sio.emit("online", final)
-    #         elif int(amount) == 5:
-    #             # final = make_booking(service_name, start, branch_id, instant=False, user=user_id)
-    #             final = create_booking(service_name, start, branch_id, False, user_id)
-    #             sio.emit("online", final)
-    #     else:
-    #         # error with payment
-    #         final = {"msg": "Error With Payment", "error": result_desc}
-    # else:
-    #     final = {"msg": False, "result": "Token Invalid"}
+    if payment_data:
+        main = json.loads(payment_data["body"])
+        parent = main["Body"]["stkCallback"]
+        result_code = parent["ResultCode"]
+        result_desc = parent["ResultDesc"]
+        if int(result_code) == 0:
+            callback_meta = parent["CallbackMetadata"]["Item"]
+            amount = callback_meta[0]["Value"]
+            # succesful payment
+            if int(amount) == 10:
+                # final = make_booking(service_name, start, branch_id, instant=True, user=user_id)
+                final = create_booking(service_name, start, branch_id, True, user_id)
+                sio.emit("online", final)
+            elif int(amount) == 5:
+                # final = make_booking(service_name, start, branch_id, instant=False, user=user_id)
+                final = create_booking(service_name, start, branch_id, False, user_id)
+                sio.emit("online", final)
+        else:
+            # error with payment
+            final = {"msg": "Error With Payment", "error": result_desc}
+    else:
+        final = {"msg": False, "result": "Token Invalid"}
     # if int(amount) == 10:
     #     final = create_booking(service_name, start, branch_id, True, user_id)
     #     sio.emit("online", final)
