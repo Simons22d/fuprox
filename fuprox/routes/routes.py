@@ -750,10 +750,11 @@ def make_book_():
     lookup = Payments.query.filter_by(token=token).all()
     # main object
     payment_data = payments_schema.dump(lookup)
-    print(">>>.",payments_data)
+
 
     # end
     payment_data = payment_data[1]
+    print(">>>.", payment_data)
     if payment_data:
         main = json.loads(payment_data["body"])
         parent = main["Body"]["stkCallback"]
