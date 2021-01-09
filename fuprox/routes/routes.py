@@ -775,7 +775,7 @@ def make_book_():
     # elif int(amount) == 5:
     #     final = create_booking(service_name, start, branch_id, False, user_id)
     #     sio.emit("online", final)
-    return jsonify(list())
+    return jsonify(final)
 
 
 @app.route("/token/status", methods=["POST"])
