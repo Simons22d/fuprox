@@ -746,10 +746,11 @@ def make_book_():
     # we are going to use the payments table to display;
     lookup = Payments.query.filter_by(token=token).first()
     # main object
-    payment_data = payment_schema.dump(lookup)
-
+    log(lookup.body)
     if payment_data:
+        payment_data = payment_schema.dump(lookup)
         log(payment_data)
+
 
         # main = json.loads(payment_data["body"])
         # parent = main["Body"]["stkCallback"]
