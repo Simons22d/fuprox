@@ -747,12 +747,13 @@ def make_book_():
     amount = request.json["amount"]
 
     # we are going to use the payments table to display;
-    lookup = Payments.query.filter_by(token=token).first()
-    print(lookup)
+    lookup = Payments.query.filter_by(token=token).all()
     # main object
-    payment_data = payment_schema.dump(lookup)
-    print(">>>.",payment_data)
+    payment_data = payments_schema.dump(lookup)
+    print(">>>.",payments_data)
+
     # end
+    payment_data = payment_data[1]
     if payment_data:
         main = json.loads(payment_data["body"])
         parent = main["Body"]["stkCallback"]
@@ -844,6 +845,7 @@ def payment_on():
     lookup = Payments.query.filter_by(token=mpesa_transaction_key).first()
     data = payment_schema.dump(lookup)
     log(data)
+
     if data:
         final = dict(data)['body']
         data_ = payment_res(final)
