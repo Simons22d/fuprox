@@ -843,6 +843,7 @@ def payment_on():
     # geting the object in the db by this key
     lookup = Payments.query.filter_by(token=mpesa_transaction_key).first()
     data = payment_schema.dump(lookup)
+    log(data)
     if data:
         final = dict(data)['body']
         data_ = payment_res(final)
