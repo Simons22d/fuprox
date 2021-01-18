@@ -1161,11 +1161,13 @@ def ahead_of_you():
 
     actual_teller_bookings = db.session.execute(query)
     data = [dict(x)["unique_id"] for x in actual_teller_bookings]
-    log(f">>{data_}")
-    log(f"<<<<<{len(data)}")
     final = len(data) + data_
 
-    return jsonify({"infront": final})
+    # mapping to unique key
+    tellers = get_teller(branch_id,service)
+
+
+    return jsonify({"infront": final, "tellers":tellers})
 
 
 @app.route("/ahead/of/you/id", methods=["POST"])
@@ -1567,8 +1569,8 @@ def is_user(user_id):
     return user_data
 
 
-def get_teller(unique_id):
-    lookup = Teller.query.filter_by(unique_id=unique_id).first()
+def get_teller(branch_id, service):
+    lookup = Teller.query.filter_by(branch=branch_id).filter_by(service=service).first()
     data = teller_schema.dump(lookup)
     return data
 
@@ -1742,6 +1744,18 @@ def make_booking(service_name, start="", branch_id=1, ticket=1, active=False, up
 
         final.update({"key": branch_data["key_"]})
     return final
+
+
+def get_service_tellers(unique_id):
+    lookup = ServiceOffered.query.filter_by(unique_id=unique_id).first()
+    if lookup:
+        service = lookup.service
+        # getting the the tellers
+        tellers = Teller.query.filter_by(branch_unique_id=unique_id).filter_by(service=serivce).all()
+    else :
+        tellers = []
+
+        return tellers_schema.dump(tellers)
 
 
 def ack_successful_entity(name, data):
