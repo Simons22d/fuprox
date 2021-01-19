@@ -1571,7 +1571,7 @@ def is_user(user_id):
 
 def get_teller(branch_id, service):
     lookup = Teller.query.filter_by(branch=branch_id).filter_by(service=service).first()
-    data = teller_schema.dump(lookup)
+    data = tellers_schema.dump(lookup)
     return data
 
 
