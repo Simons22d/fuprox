@@ -1570,7 +1570,7 @@ def is_user(user_id):
 
 
 def get_teller(branch_id, service):
-    lookup = Teller.query.filter_by(branch=branch_id).filter_by(service=service).first()
+    lookup = Teller.query.filter_by(branch=branch_id).filter_by(service=service).all()
     data = tellers_schema.dump(lookup)
     return data
 
@@ -1680,7 +1680,6 @@ def create_booking_online_(service_name, start, branch_id_, is_instant=False, us
         else:
             raise ValueError("Service Does Not Exist. Please Add Service First.")
             final = True
-
     # print("the final output of the fuction >>>>", final)
     time.sleep(5)
     return final
