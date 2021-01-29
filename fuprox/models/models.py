@@ -9,6 +9,7 @@ def ticket_unique() -> int:
     return secrets.token_hex(16)
 
 
+
 # working with flask migrate
 class ServiceOffered(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -20,6 +21,7 @@ class ServiceOffered(db.Model):
     icon = db.Column(db.String(length=20))
     is_synced = db.Column(db.Boolean, default=False)
     unique_id = db.Column(db.String(255), default=ticket_unique, unique=True)
+    medical_active = db.Column(db.Integer, default=0)
 
     def __init__(self, name, branch_id, teller, code, icon):
         self.name = name
@@ -32,7 +34,7 @@ class ServiceOffered(db.Model):
 
 class ServiceOfferedSchema(ma.Schema):
     class Meta:
-        fields = ("id", "branch_id", "name", "teller", "date_added", "code", "icon", "unique_id")
+        fields = ("id", "branch_id", "name", "teller", "date_added", "code", "icon","unique_id","medical_active")
 
 
 # creating a booking ID
